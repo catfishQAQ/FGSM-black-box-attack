@@ -12,20 +12,17 @@ print(f"Using device: {device}")
 
 class Cifar_10_Dataset(Dataset):
     def __init__(self, data_path, label_path):
-        mean = np.array([0.4914, 0.4822, 0.4465]).reshape(1, 3, 1, 1)
-        var = np.array([0.2023, 0.1994, 0.2010]).reshape(1, 3, 1, 1)
+        mean = np.array([0.4914, 0.4822, 0.4465]).reshape(1, 3)
+        var = np.array([0.2023, 0.1994, 0.2010]).reshape(1, 3)
         self.x = np.load(data_path) / 255
         self.x = (self.x - mean) / var
-        self.x = self.x.transpose(0, 1, 3, 2)
+        self.x = self.x.transpose(0, 3, 1, 2)
         self.label = np.load(label_path)
         self.label = np.reshape(self.label, (self.x.shape[0], ))
 
         # https://stackoverflow.com/questions/44717100/pytorch-convert-floattensor-into-doubletensor
         self.x, self.label = torch.from_numpy(
             self.x).float(), torch.from_numpy(self.label)
-    
-
-
 
     def __getitem__(self, index):
         return self.x[index], self.label[index]
@@ -84,6 +81,7 @@ test_data, test_labels = load_cifar_batch(os.path.join(cifar10_dir, "test_batch"
 # **合并训练集和测试集**
 all_data = np.concatenate(data_list + [test_data])  # (60000, 3, 32, 32)
 all_labels = np.concatenate(label_list + [test_labels])  # (60000,)
+all_data = all_data.transpose(0, 2, 3, 1)  # (60000, 32, 32, 3)
 
 # **保存 `.npy` 文件**
 np.save(os.path.join(save_dir, "cifar10_data.npy"), all_data)
